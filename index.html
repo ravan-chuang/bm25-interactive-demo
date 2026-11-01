@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BM25 互動搖桿與公式</title><style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#263140;background:#f5f7fb}
+*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:1200px;margin:auto}h1{font-size:27px;margin:0 0 12px}p.note{color:#667487;margin:0 0 22px}
+.card{background:white;border:1px solid #dce4ed;border-radius:19px;padding:24px;margin-bottom:20px;box-shadow:0 3px 12px #0a214107}h2{font-size:24px;margin:0 0 8px}p.sub{color:#778190;margin:0 0 20px}
+.control{display:flex;justify-content:space-between;align-items:center;font-size:20px;font-weight:700;margin:8px 0}input[type=range]{width:100%;accent-color:#2380e9;cursor:pointer;margin:10px 0 22px;height:14px}
+.frame{border:1px solid #e4e9ef;border-radius:15px;padding:15px}svg{display:block;width:100%;height:295px}
+.connector{width:3px;height:30px;background:#3584d3;margin:0 auto;position:relative}.connector:after{content:'';position:absolute;bottom:-7px;left:-8px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:13px solid #3584d3}
+.formulas{margin-top:10px;border:1px solid #dbe5ef;border-radius:16px;padding:20px 24px}.label{font-size:18px;font-weight:700;color:#2477c7;margin-bottom:15px}.equations{display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-around}.equations math{font-size:27px}
+.barrow{height:17px;border-radius:99px;background:#edf1f5;overflow:hidden}.barfill{height:100%;border-radius:99px;background:#7096cf}.barrowhead{display:flex;justify-content:space-between;margin:15px 0 7px}.rowbar{margin-bottom:22px}p.small{font-size:14px;color:#667487}footer{color:#667487;font-size:13px;margin:20px}
+@media(max-width:800px){body{padding:9px}.card{padding:12px}svg{height:245px}.equations math{font-size:19px}}
+</style></head><body><main><h1>BM25｜參數互動與公式連接</h1><p class="note">可直接拖曳滑桿；圖表、分數會即時更新。公式中的變數統一使用 <strong>tf</strong>。</p>
+<section class="card"><h2>① k₁：詞頻飽和（Term Frequency Saturation）</h2><p class="sub">假設文件長度等於平均長度；忽略 IDF。</p>
+<div class="control"><span>調整 k₁</span><output id="kval">1.00</output></div><input id="k" type="range" min="0.2" max="3" value="1" step="0.05">
+<div class="frame"><strong>詞頻增加時的 BM25 詞頻因子</strong><svg id="plot" viewBox="0 0 1080 300" aria-label="詞頻因子動態折線圖"></svg></div><div class="connector"></div>
+<div class="formulas"><div class="label">對應公式：F(tf)、一階導數與二階導數</div><div class="equations">
+<math><mrow><mi>F</mi><mo>(</mo><mi>tf</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>tf</mi><mo>(</mo><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><mn>1</mn><mo>)</mo></mrow><mrow><mi>tf</mi><mo>+</mo><msub><mi>k</mi><mn>1</mn></msub></mrow></mfrac></mrow></math>
+<math><mrow><msup><mi>F</mi><mo>′</mo></msup><mo>(</mo><mi>tf</mi><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>k</mi><mn>1</mn></msub><mo>(</mo><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><mn>1</mn><mo>)</mo></mrow><msup><mrow><mo>(</mo><mi>tf</mi><mo>+</mo><msub><mi>k</mi><mn>1</mn></msub><mo>)</mo></mrow><mn>2</mn></msup></mfrac><mo>&gt;</mo><mn>0</mn></mrow></math>
+<math><mrow><msup><mi>F</mi><mo>″</mo></msup><mo>(</mo><mi>tf</mi><mo>)</mo><mo>=</mo><mo>−</mo><mfrac><mrow><mn>2</mn><msub><mi>k</mi><mn>1</mn></msub><mo>(</mo><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><mn>1</mn><mo>)</mo></mrow><msup><mrow><mo>(</mo><mi>tf</mi><mo>+</mo><msub><mi>k</mi><mn>1</mn></msub><mo>)</mo></mrow><mn>3</mn></msup></mfrac><mo>&lt;</mo><mn>0</mn></mrow></math>
+</div></div></section>
+<section class="card"><h2>② b：文件長度正規化（Length Normalization）</h2><p class="sub">假設 tf = 3、k₁ = 1.2、平均文件長度 = 200；忽略 IDF。</p>
+<div class="control"><span>調整 b</span><output id="bval">0.00</output></div><input id="b" type="range" min="0" max="1" value="0" step="0.01">
+<div class="frame"><div id="bars"></div></div><div class="connector"></div>
+<div class="formulas"><div class="label">對應公式：文件長度調整項及其在 BM25 中的位置</div><div class="equations">
+<math><mrow><mi>L</mi><mo>(</mo><mi>d</mi><mo>,</mo><mi>b</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>b</mi><mo>+</mo><mi>b</mi><mfrac><mrow><mo>|</mo><mi>d</mi><mo>|</mo></mrow><mi>avgdl</mi></mfrac></mrow></math>
+<math><mrow><mi>TF</mi><mo>=</mo><mfrac><mrow><mi>tf</mi><mo>(</mo><msub><mi>k</mi><mn>1</mn></msub><mo>+</mo><mn>1</mn><mo>)</mo></mrow><mrow><mi>tf</mi><mo>+</mo><msub><mi>k</mi><mn>1</mn></msub><mi>L</mi><mo>(</mo><mi>d</mi><mo>,</mo><mi>b</mi><mo>)</mo></mrow></mfrac></mrow></math>
+</div></div></section><footer>Standalone offline HTML — 直接使用瀏覽器開啟，即可操作兩個滑桿。Canva 無法直接嵌入此 HTML 的 JavaScript 互動，請使用對應 MP4 動畫或錄製瀏覽器示範。</footer></main>
+<script>
+const NS='http://www.w3.org/2000/svg';const draw=(tag,attrs,parent)=>{const el=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);parent.appendChild(el);return el};
+function plotK(){const k=Number(document.getElementById('k').value);document.getElementById('kval').textContent=k.toFixed(2);const svg=document.getElementById('plot');svg.innerHTML=''; const left=54,top=24,w=980,h=245;
+for(let y=0;y<=4;y++){let py=top+h-y*h/4;draw('line',{x1:left,y1:py,x2:left+w,y2:py,stroke:'#e9edf3','stroke-width':2},svg);let t=draw('text',{x:20,y:py+5,fill:'#6b7788','font-size':16},svg);t.textContent=y}
+const pts=[];for(let tf=1;tf<=12;tf++){let v=tf*(k+1)/(tf+k),x=left+(tf-1)*w/11,y=top+h-v*h/4;pts.push([x,y]);let t=draw('text',{x:x-5,y:top+h+23,fill:'#6b7788','font-size':16},svg);t.textContent=tf}
+draw('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:'#2583ed','stroke-width':4,'stroke-linejoin':'round'},svg);pts.forEach(([x,y])=>draw('circle',{cx:x,cy:y,r:5,fill:'#2583ed',stroke:'white','stroke-width':1.5},svg))}
+function plotB(){const b=Number(document.getElementById('b').value);document.getElementById('bval').textContent=b.toFixed(2);let root=document.getElementById('bars');root.innerHTML='';for(const [name,l] of [['短文件（100 詞）',100],['平均長度（200 詞）',200],['長文件（400 詞）',400]]){const factor=1-b+b*l/200;const score=3*2.2/(3+1.2*factor);const div=document.createElement('div');div.className='rowbar';div.innerHTML=`<div class="barrowhead"><span>${name}</span><b>${score.toFixed(3)}</b></div><div class="barrow"><div class="barfill" style="width:${100*score/2.2}%"></div></div>`;root.appendChild(div)}}
+for(const id of ['k','b'])document.getElementById(id).addEventListener('input',()=>{plotK();plotB()});plotK();plotB();
+</script></body></html>
